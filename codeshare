@@ -1,0 +1,107 @@
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h3 id="youth" class="h4 mrgn-tp-sm">Free admission for youth 17 and under</h3>
+        <p>As of January 1, 2018, admission to Parks Canada places for youth 17 and under is free! There’s no better time to create lasting memories with the whole family. </p>
+        <div class="accordion">
+            <details class="acc-group">
+                <summary class="wb-toggle tgl-tab" data-toggle="{'parent': '.accordion', 'group': '.acc-group'}">
+                    Details
+                </summary>
+                <div class="tgl-panel">
+                    <h4>What is free?</h4>
+                    <p> Admission to all national parks, national historic sites, and national marine conservation areas operated by Parks Canada will be provided free of charge.</p>
+                    <p>Free admission for youth only applies to places managed by Parks Canada. It does not apply to provincial parks, territorial parks, municipal and private parks, nor to the many historic sites not managed by Parks Canada.</p>
+                    <p>Please refer to the <a href="~/link.aspx?_id=9AF22BD1920D4F6FB725BB42B406F348&amp;_z=z" onclick="ga('send', 'event', '2018pass', 'link_click', 'List of places')">full list of Parks Canada places</a> before you plan your visit to take advantage of free admission for youth.</p>
+                    <h4>What is not free?</h4>
+                    <p> Parks Canada is pleased to offer free admission for youth at our parks and sites, however regular fees still apply for other experiences and services, such as:</p>
+                    <ul>
+                        <li>Camping, backcountry and other accommodations</li>
+                        <li>Canadian Rockies Hot Springs</li>
+                        <li>Northern Park Backcountry Camping and Excursion Permit</li>
+                        <li>Lockage</li>
+                        <li>Mooring</li>
+                        <li>Reservation fees</li>
+                        <li>Guided tours and hikes and programs not usually included with admission</li>
+                        <li>Some special event fees</li>
+                        <li>Firewood</li>
+                        <li>Backcountry overnight use</li>
+                    </ul>
+                    <p><strong>Note</strong>: This is not an exhaustive list. Please verify with the location you will be visiting for more information.</p>
+                </div>
+        </div>
+        </details>
+    </div>
+</div>
+<style>
+    /**
+        * *Temp fix for fee wells having <em> 
+        * @author Drew McDonald
+        * @background Removes the italics for easier reading.
+        *! should be replaced when new data is uploaded
+        */
+
+    div.wb-tabs div.well em {
+        font-style: normal;
+    }
+    /* Temp fix for first (empty) column being displayed */
+    div.wb-tabs div.tgl-panel table td.col-sm-1:first-of-type {
+        display: none !important;
+  visibility: hidden !important;
+    }
+    
+
+</style>
+<script>
+    $(document).on("wb-ready.wb", function (event) {
+
+        /**
+        * *Temp fix for English $ formatting
+        * @author Drew McDonald
+        * @background Switches thousand seperator to ,; removes space after $ and switches decimal , to .
+        * @requires none
+        * @optional none
+        */
+        let feeTDs = document.querySelectorAll('td:last-of-type');
+        feeTDs.forEach(td => {
+            let tdText = td.textContent;
+            tdText = tdText.replace(/\$\s/, "$").replace(/([0-9])\.([0-9][0-9][0-9])/, "$1,$2").replace(/([0-9]),([0-9][0-9])$/, "$1.$2");
+            td.textContent = tdText;
+        });
+
+        /**
+            * *Add Fee IDs
+            * @author Drew McDonald
+            * @background Adds an ID to each H3 after the first, as well as adding a table of contents
+            * @requires none
+            * @optional none
+            */
+
+        let numberH3 = document.querySelectorAll("#details-panel1 h3"); //Gather all h3s        
+        if (numberH3.length > 1) { // Run script if there is more than one h3 
+            $("#details-panel1").prepend("<h3>Fee categories</h3><ul id='feetoc'></ul>"); // Create a table of contents
+            $("#details-panel1 h3:not(:first)").each(function () { //For every h3 after the first (which was created above)
+                let linkText = this.textContent.toLowerCase(); //Save the text of the h3 in lowercase
+                let idName = linkText.normalize("NFD").replace(/ |'|[\u0300-\u036f]/g, ""); //Convert the lowercase text to url friendly text
+                $(this).attr('id', idName); // Add the new url friendly text to the h3 as an id
+                linkText = linkText.charAt(0).toUpperCase() + linkText.slice(1); //Capitalize the first letter to try to find a middle ground between all caps and sentence case 
+                $("#feetoc").append('<li><a href="#' + idName + '">' + linkText + '</a></li>'); //Create a link to the newly created id and add it to the table of contents
+            });
+            /** 
+                * *Move fee details / additional information to corresponding heading
+                * @author Drew McDonald
+                * @background Looks for elements to move down to a specified fee heading, allowing for providing more details about fee categories
+                * @requires data-fee-h3 or data-fee-h4
+                * @optional none
+                */
+            $("[data-fee-h3]").each(function () {  //Go through each element with the data-fee-h3 attribute added
+                let destinationH3 = $(this).attr("data-fee-h3"); //Save the specified h3
+                let destinationH4 = $(this).attr("data-fee-h4"); //Save the specified h4            
+                if (destinationH4) { //If an h4 was specified
+                    $('h3:contains("' + destinationH3 + '")').nextAll('h4:contains("' + destinationH4 + '")').eq(0).after($(this)); //Find the specified h3, and then the next time the specified h4 appears, move the element there
+                } else { //If an h4 wasn't specified
+                    $('h3:contains("' + destinationH3 + '")').after($(this)); //Find the specified h3 and move the element there
+                };
+            });
+        };
+    });
+</script>
