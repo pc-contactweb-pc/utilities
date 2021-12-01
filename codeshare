@@ -43,13 +43,12 @@
     div.wb-tabs div.well em {
         font-style: normal;
     }
+
     /* Temp fix for first (empty) column being displayed */
     div.wb-tabs div.tgl-panel table td.col-sm-1:first-of-type {
         display: none !important;
-  visibility: hidden !important;
+        visibility: hidden !important;
     }
-    
-
 </style>
 <script>
     $(document).on("wb-ready.wb", function (event) {
@@ -74,34 +73,63 @@
             * @background Adds an ID to each H3 after the first, as well as adding a table of contents
             * @requires none
             * @optional none
-            */
+        */
+        let i = 1; //Panel counter
+        let feePanels = document.querySelectorAll('div.tabpanels>details[id^="details-panel"'); //Find all detail panels
+        feePanels.forEach(panel => {
+            let numberH3 = panel.querySelectorAll('h3'); //Gather all h3s        
+            if (numberH3.length > 1) { // Run script if there is more than one h3 
+                let feeTocID = `feetoc_${i}`; //Prep the id for the new ul (toc = Table of Contents)
+                panel.insertAdjacentHTML('afterbegin', `<h3>Fee categories</h3><ul id='${feeTocID}'></ul>`); //Insert a new heading and ul at the start of the panel
+                let ulTarget = document.getElementById(feeTocID); //Save the newly created ul for later
+                let headings = panel.querySelectorAll('h3:not(:first-child'); //Find all h3s on the panel, aside from the Fee categories one that was created above
+                headings.forEach(heading => { //For each found heading, do the following: 
+                    let linkText = heading.textContent; //Save the link text
+                    linkText = linkText.toLowerCase(); //Convert the link text to lower case
+                    let idName = linkText.normalize("NFD"); //Save a version of the link text in the NFD format
+                    idName = idName.replace(/ |'|[\u0300-\u036f]/g, ""); //Convert the lowercase text to url friendly text
+                    heading.setAttribute('id', `${idName}_${i}`); //Update the heading with this new ID, with the panel # added after
+                    linkText = linkText.charAt(0).toUpperCase() + linkText.slice(1); //Capitalize the first letter to try to find a middle ground between all caps and sentence case 
+                    let linkHTML = `<li><a href="#${idName}_${i}">${linkText}</a></li>` //Create the link html 
+                    ulTarget.insertAdjacentHTML('beforeend', linkHTML) //Add the link html to the end of the TOC ul
+                });
+            }
+            i++; //Increase the panel count
+        });
 
-        let numberH3 = document.querySelectorAll("#details-panel1 h3"); //Gather all h3s        
-        if (numberH3.length > 1) { // Run script if there is more than one h3 
-            $("#details-panel1").prepend("<h3>Fee categories</h3><ul id='feetoc'></ul>"); // Create a table of contents
-            $("#details-panel1 h3:not(:first)").each(function () { //For every h3 after the first (which was created above)
-                let linkText = this.textContent.toLowerCase(); //Save the text of the h3 in lowercase
-                let idName = linkText.normalize("NFD").replace(/ |'|[\u0300-\u036f]/g, ""); //Convert the lowercase text to url friendly text
-                $(this).attr('id', idName); // Add the new url friendly text to the h3 as an id
-                linkText = linkText.charAt(0).toUpperCase() + linkText.slice(1); //Capitalize the first letter to try to find a middle ground between all caps and sentence case 
-                $("#feetoc").append('<li><a href="#' + idName + '">' + linkText + '</a></li>'); //Create a link to the newly created id and add it to the table of contents
+        /** 
+            * *Move fee details / additional information to corresponding heading
+            * @author Drew McDonald
+            * @background Looks for elements to move down to a specified fee heading, allowing for providing more details about fee categories
+            * @requires data-fee-h3 or data-fee-h4
+            * @optional none
+            */
+        let detailMoved = false;
+        let cloneDestination;
+        let cloneCopy = [];
+        let detailsToMove = document.querySelectorAll('[data-fee-h3]');
+        i = 1; //Reset counter
+        detailsToMove.forEach(detailToMove => {
+            detailMoved = false; //Reset move success check 
+            let clone = detailToMove.cloneNode(true); //Clone the element
+            let destinationH3 = detailToMove.getAttribute('data-fee-h3'); //Save the specified target h3 heading
+            let destinationH4 = detailToMove.getAttribute('data-fee-h4'); //Save the specified target h4 heading    
+            feePanels.forEach(panel => {
+                i++;
+                cloneCopy[i] = clone.cloneNode(true); //Create a fresh copy of the clone
+                let panelID = `#${panel.id}`; //Get the current panel ID 
+                cloneDestination = $(panelID).find(`h3:contains('${destinationH3}')`); //Within this panel, find the first matching H3
+                if (destinationH4) { //If an h4 was specified, search for the first matching h4
+                    cloneDestination = $(cloneDestination).nextAll(`h4:contains('${destinationH4}')`).eq(0); //Find the first (and only the first) match
+                }
+                if (cloneDestination.length > 0) { //If a cloneDestination was found, 
+                    cloneDestination.after(cloneCopy[i]); //Insert the clone copy
+                    detailMoved = true; //Flag that the detail was moved
+                }
             });
-            /** 
-                * *Move fee details / additional information to corresponding heading
-                * @author Drew McDonald
-                * @background Looks for elements to move down to a specified fee heading, allowing for providing more details about fee categories
-                * @requires data-fee-h3 or data-fee-h4
-                * @optional none
-                */
-            $("[data-fee-h3]").each(function () {  //Go through each element with the data-fee-h3 attribute added
-                let destinationH3 = $(this).attr("data-fee-h3"); //Save the specified h3
-                let destinationH4 = $(this).attr("data-fee-h4"); //Save the specified h4            
-                if (destinationH4) { //If an h4 was specified
-                    $('h3:contains("' + destinationH3 + '")').nextAll('h4:contains("' + destinationH4 + '")').eq(0).after($(this)); //Find the specified h3, and then the next time the specified h4 appears, move the element there
-                } else { //If an h4 wasn't specified
-                    $('h3:contains("' + destinationH3 + '")').after($(this)); //Find the specified h3 and move the element there
-                };
-            });
-        };
+            if (detailMoved) { //If the detail was moved, remove the detail. Otherwise the detail will be left at the top of the page.
+                detailToMove.remove(); 
+            }
+        });
     });
 </script>
