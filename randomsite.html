@@ -624,7 +624,9 @@
                 outputNHS.innerHTML = outputLocation.name;
                 outputNHSEn.href = outputLocation.path;
                 outputNHSFr.href = outputLocation.path.replace("/en/", "/fr/");
-
+                if (outputLocation.path.includes("apps/dfhd/")) {
+                    outputNHS.innerHTML += " (DFHD)"
+                }
 
                 // NMCA
 
